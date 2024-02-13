@@ -1,65 +1,87 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_weather/weather/weather_bloc.dart';
+import 'package:weather_api/ApiClient/weather_api_client.dart';
+import 'package:weather_repository/modals/weather_repository.dart';
+import 'package:http/http.dart' as http;
 
-void main() {
-  runApp(const MyApp());
+class SimpleBlocObserver extends BlocObserver {
+  @override
+  void onTransition(Bloc<dynamic, dynamic> bloc, Transition transition) {
+    super.onTransition(bloc, transition);
+    print(transition);
+  }
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+void main() {
+  Bloc.observer = SimpleBlocObserver();
+
+  final WeatherRepository repository = WeatherRepository(
+    weatherApiClient: WeatherApiClient(
+      httpClient: http.Client(),
+    ),
+  );
+
+  runApp(App(
+    weatherRepository: repository,
+  ));
+}
+
+class App extends StatelessWidget {
+  final WeatherRepository weatherRepository;
+
+  const App({Key? key, required this.weatherRepository}) : super(key: key);
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+      title: 'Quote App',
+      home: Scaffold(
+        appBar: AppBar(title: const Text('Weather App')),
+        body: BlocProvider(
+          create: (context) =>
+              WeatherBloc(weatherRepository: weatherRepository),
+          child: HomePage(),
+        ),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+class HomePage extends StatelessWidget {
+  late WeatherBloc weatherBloc;
 
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
+    return BlocBuilder<WeatherBloc, WeatherState>(
+      builder: (context, state) {
+        if (state is WeatherEmpty) {
+          BlocProvider.of<WeatherBloc>(context)
+              .add(const GetCurrentWeatherData(location: "Ahmedabad"));
+        }
+        if (state is WeatherError) {
+          return const Center(
+            child: Text("Failed to fetch Weather Info!"),
+          );
+        }
+        if (state is WeatherLoaded) {
+          return ListTile(
+            title: Text(
+              '${state.weather.location!.name}',
+              style: const TextStyle(fontSize: 10.0),
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: (){},
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+            subtitle: Text('${state.weather.current!.tempC}'),
+            isThreeLine: true,
+            dense: true,
+          );
+        }
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      },
     );
   }
 }
