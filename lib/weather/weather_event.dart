@@ -7,8 +7,21 @@ abstract class WeatherEvent extends Equatable {
 
 class GetCurrentWeatherData extends WeatherEvent {
   final String location;
-  const GetCurrentWeatherData({required this.location});
+  final String days;
+
+  const GetCurrentWeatherData({required this.location, required this.days});
 
   @override
+  List<Object?> get props => [];
+}
+
+class GetForecastWeatherData extends WeatherEvent {
+  final String location;
+  final String days;
+
+  const GetForecastWeatherData({required this.location, required this.days});
+
+  @override
+  // TODO: implement props
   List<Object?> get props => [];
 }
