@@ -5,6 +5,9 @@ import 'package:weather_api/ApiClient/weather_api_client.dart';
 import 'package:weather_repository/modals/weather_repository.dart';
 import 'package:http/http.dart' as http;
 
+import 'Custom/app_themes.dart';
+import 'Presentation/home_page.dart';
+
 class SimpleBlocObserver extends BlocObserver {
   @override
   void onTransition(Bloc<dynamic, dynamic> bloc, Transition transition) {
@@ -38,50 +41,16 @@ class App extends StatelessWidget {
     return MaterialApp(
       title: 'Quote App',
       home: Scaffold(
-        appBar: AppBar(title: const Text('Weather App')),
+        appBar: AppBar(
+          title: const Text('Weather App'),
+          centerTitle: true,
+        ),
         body: BlocProvider(
           create: (context) =>
               WeatherBloc(weatherRepository: weatherRepository),
           child: HomePage(),
         ),
       ),
-    );
-  }
-}
-
-class HomePage extends StatelessWidget {
-  late WeatherBloc weatherBloc;
-
-  HomePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<WeatherBloc, WeatherState>(
-      builder: (context, state) {
-        if (state is WeatherEmpty) {
-          BlocProvider.of<WeatherBloc>(context)
-              .add(const GetCurrentWeatherData(location: "Ahmedabad"));
-        }
-        if (state is WeatherError) {
-          return const Center(
-            child: Text("Failed to fetch Weather Info!"),
-          );
-        }
-        if (state is WeatherLoaded) {
-          return ListTile(
-            title: Text(
-              '${state.weather.location!.name}',
-              style: const TextStyle(fontSize: 10.0),
-            ),
-            subtitle: Text('${state.weather.current!.tempC}'),
-            isThreeLine: true,
-            dense: true,
-          );
-        }
-        return const Center(
-          child: CircularProgressIndicator(),
-        );
-      },
     );
   }
 }
