@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_weather/Presentation/Dashboard/dashboard_bloc.dart';
 import 'package:flutter_weather/weather/weather_bloc.dart';
 import 'package:weather_api/ApiClient/weather_api_client.dart';
 import 'package:weather_repository/modals/weather_repository.dart';
 import 'package:http/http.dart' as http;
 
 import 'Custom/app_themes.dart';
+import 'Presentation/Dashboard/dashboard.dart';
 import 'Presentation/home_page.dart';
 
 class SimpleBlocObserver extends BlocObserver {
@@ -45,10 +47,17 @@ class App extends StatelessWidget {
           title: const Text('Weather App'),
           centerTitle: true,
         ),
-        body: BlocProvider(
-          create: (context) =>
-              WeatherBloc(weatherRepository: weatherRepository),
-          child: HomePage(),
+        body: MultiBlocProvider(
+          providers: [
+            BlocProvider(
+              create: (context) =>
+                  WeatherBloc(weatherRepository: weatherRepository),
+            ),
+            BlocProvider(
+              create: (context) => DashboardBloc(context: context),
+            ),
+          ],
+          child: Dashboard(),
         ),
       ),
     );
